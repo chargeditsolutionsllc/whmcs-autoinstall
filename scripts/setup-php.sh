@@ -41,8 +41,8 @@ cd /tmp
 wget https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz
 tar xfz ioncube_loaders_lin_x86-64.tar.gz
 PHP_EXT_DIR=$(php -i | grep "extension_dir" | sed 's/.*=> //' | sed 's/ =>.*//')
-cp "/tmp/ioncube/ioncube_loader_lin_${PHP_VERSION}.so" "${PHP_EXT_DIR}/ioncube_loader.so"
-echo "zend_extension=${PHP_EXT_DIR}/ioncube_loader.so" > "/etc/php/${PHP_VERSION}/mods-available/ioncube.ini"
+cp "/tmp/ioncube/ioncube_loader_lin_${PHP_VERSION}.so" "${PHP_EXT_DIR}/ioncube_loader_lin_${PHP_VERSION}.so"
+echo "zend_extension=${PHP_EXT_DIR}/ioncube_loader_lin_${PHP_VERSION}.so" > "/etc/php/${PHP_VERSION}/mods-available/ioncube.ini"
 ln -s "/etc/php/${PHP_VERSION}/mods-available/ioncube.ini" "/etc/php/${PHP_VERSION}/apache2/conf.d/00-ioncube.ini"
 
 # Clean up
