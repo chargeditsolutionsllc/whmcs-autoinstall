@@ -188,7 +188,7 @@ For issues and feature requests, please use the GitHub issue tracker.
 
 ## Security
 
-Report security vulnerabilities via email to security@ychargeditsolutions.com.
+Report security vulnerabilities via email to security@chargeditsolutions.com.
 
 ## Contributing
 
