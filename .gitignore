@@ -1,0 +1,28 @@
+# Environment variables
+.env
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+*.pid
+*.sock
+
+# Temp files
+*.tmp
+*.temp
+.DS_Store
+
+# Certificate files
+*.pem
+*.key
+*.crt
+
+# Backup files
+*.bak
+*~
+*.swp
+
+# WHMCS specific
+configuration.php
