@@ -196,7 +196,7 @@ CLOUDFLARE_TRUSTED_IPS_ENABLE=true
 
 ### Core Configuration Files
 - `/etc/apache2/apache2.conf` - Main Apache configuration
-- `/etc/php/8.1/apache2/php.ini` - PHP configuration
+- `/etc/php/${PHP_VERSION}/apache2/php.ini` - PHP configuration
 - `/etc/mysql/mariadb.conf.d/50-server.cnf` - MariaDB configuration
 - `/var/www/whmcs/.env` - WHMCS environment configuration
 
@@ -204,7 +204,7 @@ CLOUDFLARE_TRUSTED_IPS_ENABLE=true
 1. **Apache SSL Configuration**
    - `/etc/apache2/conf-available/ssl-security.conf` - SSL security settings
    - `/etc/apache2/sites-available/[domain].conf` - Virtual host configuration
-   - `/etc/letsencrypt/live/[domain]/` - Let's Encrypt certificates
+   - `/etc/letsencrypt/live/${DOMAIN}/` - Let's Encrypt certificates
    - `/etc/ssl/whmcs/` - Custom SSL certificates directory
 
 2. **Let's Encrypt Files**
@@ -301,7 +301,7 @@ mysqldump -u root -p whmcs > backup.sql
 ### Getting Help
 - GitHub Issues: Bug reports and feature requests
 - Security Reports: security@chargeditsolutions.com
-- Documentation: Wiki pages
+- Documentation: README.md
 
 ### Contributing
 1. Fork repository
