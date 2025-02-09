@@ -39,7 +39,7 @@ Automated installation and configuration scripts for setting up WHMCS on a Debia
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/whmcs_init.git
+   git clone https://github.com/chargeditsolutionsllc/whmcs_init.git
    cd whmcs_init
    ```
 
@@ -188,7 +188,7 @@ For issues and feature requests, please use the GitHub issue tracker.
 
 ## Security
 
-Report security vulnerabilities via email to security@yourdomain.com.
+Report security vulnerabilities via email to security@ychargeditsolutions.com.
 
 ## Contributing
 
