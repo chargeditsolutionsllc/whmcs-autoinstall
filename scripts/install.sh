@@ -7,19 +7,22 @@ source "${SCRIPT_DIR}/utils.sh"
 
 # Validate environment and requirements
 check_root
-load_env
-validate_env
-
-log "INFO" "Starting WHMCS installation process..."
 
 # Update system first
 log "INFO" "Updating system packages..."
 apt update
 apt upgrade -y
 
-# Install basic requirements
-log "INFO" "Installing basic requirements..."
-apt install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common
+# Install validation requirements
+log "INFO" "Installing validation requirements..."
+apt install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common \
+    net-tools dnsutils bc procps
+
+# Now load and validate environment
+load_env
+validate_env
+
+log "INFO" "Starting WHMCS installation process..."
 
 # Configure Cloudflare mirror for faster downloads
 log "INFO" "Configuring package mirrors..."

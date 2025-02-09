@@ -46,8 +46,124 @@ check_root() {
     fi
 }
 
-# Validate environment variables
+# Validate domain format
+validate_domain() {
+    local domain=$1
+    # RFC 1123 hostname check with common TLD verification
+    if ! echo "$domain" | grep -P '^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$' > /dev/null; then
+        log "ERROR" "Invalid domain format: $domain"
+        return 1
+    fi
+    return 0
+}
+
+# Validate email format
+validate_email() {
+    local email=$1
+    # Basic email format check
+    if ! echo "$email" | grep -P '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$' > /dev/null; then
+        log "ERROR" "Invalid email format: $email"
+        return 1
+    fi
+    return 0
+}
+
+# Check system requirements
+check_system_requirements() {
+    log "INFO" "Checking system requirements..."
+    
+    # Check CPU cores
+    local cpu_cores=$(nproc)
+    if [ "$cpu_cores" -lt 2 ]; then
+        log "ERROR" "Insufficient CPU cores. Minimum 2 cores required, found $cpu_cores"
+        return 1
+    fi
+    
+    # Check available memory (in MB)
+    local total_ram=$(free -m | awk '/^Mem:/{print $2}')
+    if [ "$total_ram" -lt 2048 ]; then
+        log "ERROR" "Insufficient memory. Minimum 2GB required, found ${total_ram}MB"
+        return 1
+    fi
+    
+    # Check available disk space (in MB)
+    local free_space=$(df -m /var/www | awk 'NR==2 {print $4}')
+    if [ "$free_space" -lt 5120 ]; then
+        log "ERROR" "Insufficient disk space. Minimum 5GB required, found ${free_space}MB"
+        return 1
+    fi
+    
+    return 0
+}
+
+# Check required ports availability
+check_ports() {
+    log "INFO" "Checking port availability..."
+    local ports=(80 443 3306)
+    local used_ports=()
+    
+    for port in "${ports[@]}"; do
+        if netstat -tuln | grep -q ":$port "; then
+            used_ports+=($port)
+        fi
+    done
+    
+    if [ ${#used_ports[@]} -ne 0 ]; then
+        log "ERROR" "Required ports already in use: ${used_ports[*]}"
+        return 1
+    fi
+    return 0
+}
+
+# Check network connectivity
+check_network() {
+    log "INFO" "Checking network connectivity..."
+    
+    # Check internet connectivity
+    if ! ping -c 1 8.8.8.8 >/dev/null 2>&1; then
+        log "ERROR" "No internet connectivity"
+        return 1
+    fi
+    
+    # Check DNS resolution
+    if ! host -t A debian.org >/dev/null 2>&1; then
+        log "ERROR" "DNS resolution not working"
+        return 1
+    fi
+    
+    return 0
+}
+
+# Check SSL configuration
+check_ssl_config() {
+    if [ "$ENABLE_SSL" = "true" ]; then
+        log "INFO" "Checking SSL configuration..."
+        
+        if [ "$SSL_TYPE" = "custom" ]; then
+            if [ -z "$SSL_CERT_PATH" ] || [ -z "$SSL_KEY_PATH" ]; then
+                log "ERROR" "Custom SSL enabled but certificate paths not provided"
+                return 1
+            fi
+        elif [ "$SSL_TYPE" = "letsencrypt" ]; then
+            if ! is_package_installed "certbot"; then
+                log "WARN" "Certbot not installed, will be installed during setup"
+            fi
+        else
+            log "ERROR" "Invalid SSL_TYPE. Must be 'letsencrypt' or 'custom'"
+            return 1
+        fi
+    fi
+    return 0
+}
+
+# Validate environment variables and system configuration
 validate_env() {
+    log "INFO" "Starting environment validation..."
+    
+    # Check if running as root first
+    check_root
+    
+    # Check required variables
     local required_vars=("DOMAIN" "EMAIL" "MYSQL_USER" "MYSQL_DATABASE")
     local missing_vars=()
 
@@ -61,6 +177,27 @@ validate_env() {
         log "ERROR" "Missing required environment variables: ${missing_vars[*]}"
         exit 1
     fi
+
+    # Validate formats
+    validate_domain "$DOMAIN" || exit 1
+    validate_email "$EMAIL" || exit 1
+    
+    # System checks
+    check_system_requirements || exit 1
+    check_network || exit 1
+    check_ports || exit 1
+    check_ssl_config || exit 1
+    
+    # If Cloudflare is enabled, check DNS
+    if [ "$ENABLE_CLOUDFLARE" = "true" ]; then
+        log "INFO" "Checking Cloudflare configuration..."
+        if ! host -t A "$DOMAIN" 2>&1 | grep -q "has address"; then
+            log "ERROR" "Domain $DOMAIN does not have a valid A record"
+            exit 1
+        fi
+    fi
+    
+    log "INFO" "Environment validation completed successfully"
 }
 
 # Generate secure password
