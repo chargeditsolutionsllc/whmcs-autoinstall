@@ -1,411 +1,317 @@
 # WHMCS Installation Scripts for Debian 12
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Debian](https://img.shields.io/badge/Debian-12_Bookworm-red.svg)](https://www.debian.org)
+[![WHMCS](https://img.shields.io/badge/WHMCS-Compatible-blue.svg)](https://www.whmcs.com)
 
-Automated installation and configuration scripts for setting up WHMCS on a Debian 12 (Bookworm) system. These scripts handle the complete server setup process including PHP, MariaDB, Apache, and security configurations.
+Enterprise-grade installation and configuration scripts for deploying WHMCS on Debian 12 (Bookworm). Automates the complete server setup process with security-first approach.
 
-## Features
+## System Requirements
 
-- **Automated Setup**
-  - PHP 8.1 with all required extensions
-  - MariaDB 10.11 with optimized configuration
-  - Apache with HTTP/2 and SSL support
-  - ModSecurity with OWASP ruleset
-  - UFW firewall with Cloudflare integration
-  - Automatic security updates
+| Component | Requirement |
+|-----------|-------------|
+| OS | Debian 12 (Bookworm) |
+| CPU | 2+ cores recommended |
+| RAM | 4GB minimum, 8GB recommended |
+| Storage | 20GB minimum |
+| Network | Static IP address |
+| Domain | Valid domain pointed to server |
+| License | Valid WHMCS license |
 
-- **Security Focus**
-  - Secure default configurations
-  - File permission hardening
-  - ModSecurity WAF integration
-  - Cloudflare IP allowlisting
-  - Security headers implementation
-  - Automatic security updates
+## Table of Contents
 
-- **Best Practices**
-  - Environment-based configuration
-  - Modular installation process
-  - Comprehensive logging
-  - Error handling
-  - Backup creation
-  - Service verification
-
-## Prerequisites
-
-- Fresh Debian 12 (Bookworm) installation
-- Root access
-- Domain pointed to your server
-- WHMCS license (not included)
+- [Quick Start](#quick-start)
+- [Features](#features)
+- [Basic Configuration](#basic-configuration)
+- [Installation Steps](#installation-steps)
+- [Post-Installation](#post-installation)
+- [Advanced Configuration](#advanced-configuration)
+  - [SSL Configuration](#ssl-configuration)
+  - [Cloudflare Integration](#cloudflare-integration)
+  - [Security Features](#security-features)
+- [Configuration Files Reference](#configuration-files-reference)
+  - [Core Configuration Files](#core-configuration-files)
+  - [SSL Configuration Files](#ssl-configuration-files)
+  - [Security Configuration Files](#security-configuration-files)
+  - [Log Files](#log-files)
+  - [Backup Locations](#backup-locations)
+- [Maintenance](#maintenance)
+- [Troubleshooting](#troubleshooting)
+- [Support & Contributing](#support--contributing)
 
 ## Quick Start
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/chargeditsolutionsllc/whmcs_init.git
-   cd whmcs_init
-   ```
-
-2. Configure your environment:
-   ```bash
-   cp .env.example .env
-   nano .env
-   ```
-
-3. Make scripts executable:
-   ```bash
-   chmod +x scripts/*.sh
-   ```
-
-4. Run the installation:
-   ```bash
-   sudo ./scripts/install.sh
-   ```
-
-## Environment Configuration
-
-Edit `.env` file with your settings:
-
 ```bash
-# Domain Configuration
+# 1. Clone repository
+git clone https://github.com/chargeditsolutionsllc/whmcs_init.git
+cd whmcs_init
+
+# 2. Configure environment
+cp .env.example .env
+nano .env
+
+# 3. Run installation
+chmod +x scripts/*.sh
+sudo ./scripts/install.sh
+```
+
+## Features
+
+### Core Components
+- PHP 8.1 with optimized configuration
+- MariaDB 10.11 with security hardening
+- Apache with HTTP/2 and SSL support
+- ModSecurity WAF with OWASP ruleset
+
+### Security Focus
+- Automated security hardening
+- File permission management
+- Cloudflare integration
+- Security headers implementation
+- Automatic updates
+
+### Best Practices
+- Environment-based configuration
+- Modular installation process
+- Comprehensive logging
+- Automated backups
+- Service monitoring
+
+## Basic Configuration
+
+1. **Edit `.env` file with your settings:**
+```bash
+# Domain Settings
 DOMAIN=billing.yourdomain.com
 EMAIL=admin@yourdomain.com
 
-# Database Configuration
+# Database Settings
 MYSQL_USER=whmcs_user
 MYSQL_DATABASE=whmcs
 
-# Installation Paths
+# Installation Path
 WHMCS_PATH=/var/www/whmcs
+```
 
-# SSL Configuration
+2. **Choose SSL Configuration:**
+```bash
+# SSL Settings
 ENABLE_SSL=true
-SSL_TYPE=letsencrypt        # Options: letsencrypt, custom
-SSL_STAGING=false          # Use Let's Encrypt staging for testing
-SSL_AUTO_RENEW=true
-SSL_HSTS_ENABLE=true      # Enable HTTP Strict Transport Security
-
-# Cloudflare Configuration
-ENABLE_CLOUDFLARE=false
-CLOUDFLARE_TRUSTED_IPS_ENABLE=true
+SSL_TYPE=letsencrypt  # Options: letsencrypt, custom
 ```
 
 See `.env.example` for all available options.
 
-## SSL Configuration
+## Installation Steps
 
-The installation supports various SSL configurations to accommodate different environments and requirements:
+The installer performs these steps automatically:
 
-### Let's Encrypt SSL
+1. **System Preparation**
+   - System updates
+   - Required dependencies
+   - Package mirror optimization
 
-1. **Production Environment**
+2. **Component Installation**
+   - PHP 8.1 with extensions
+   - MariaDB 10.11
+   - Apache with mods
+   - IonCube Loader
+
+3. **Security Configuration**
+   - UFW firewall setup
+   - ModSecurity configuration
+   - File permissions
+   - Security headers
+
+## Post-Installation
+
+1. **Upload WHMCS Files**
    ```bash
-   SSL_TYPE=letsencrypt
-   SSL_STAGING=false
+   # Upload to
+   /var/www/whmcs/public_html/
    ```
-   - Uses Let's Encrypt production certificates
-   - Suitable for live websites
-   - Limited to 50 certificates per domain per week
 
-2. **Staging Environment**
-   ```bash
-   SSL_TYPE=letsencrypt
-   SSL_STAGING=true
-   ```
-   - Uses Let's Encrypt staging certificates
-   - For testing and development
-   - No rate limits
-   - Browsers will show certificate warnings (expected)
+2. **Complete Setup**
+   - Visit `https://your-domain.com/install/install.php`
+   - Follow installation wizard
+   - Remove install directory
 
-### Custom SSL
+3. **Verify Installation**
+   - Check PHP configuration
+   - Test database connection
+   - Verify SSL setup
 
+## Advanced Configuration
+
+### SSL Configuration
+
+#### Let's Encrypt SSL
+```bash
+# Production
+SSL_TYPE=letsencrypt
+SSL_STAGING=false
+
+# Testing
+SSL_TYPE=letsencrypt
+SSL_STAGING=true
+```
+
+#### Custom SSL
 ```bash
 SSL_TYPE=custom
 SSL_CERT_PATH=/path/to/cert.pem
 SSL_KEY_PATH=/path/to/key.pem
-SSL_CHAIN_PATH=/path/to/chain.pem  # Optional
 ```
-- Use your own SSL certificates
-- Supports both self-signed and commercial certificates
-- Chain certificate optional but recommended
 
 ### Cloudflare Integration
 
-When using Cloudflare, configure the following:
-
 ```bash
+# Enable Cloudflare
 ENABLE_CLOUDFLARE=true
 CLOUDFLARE_TRUSTED_IPS_ENABLE=true
 ```
 
-#### Firewall Configuration
-
-The UFW firewall configuration automatically adjusts based on your Cloudflare settings:
-
-1. **With Cloudflare Enabled** (`ENABLE_CLOUDFLARE=true`)
-   - Only Cloudflare IP ranges are whitelisted for ports 80 and 443
-   - Provides additional security by blocking direct access
-   - Automatically updates with latest Cloudflare IP ranges
-
-2. **Without Cloudflare** (`ENABLE_CLOUDFLARE=false`)
-   - Ports 80 and 443 are open to all IPs
-   - Standard web server configuration
-   - Direct access allowed from any IP
-
-#### Cloudflare SSL Modes:
-
-1. **With Let's Encrypt Production**
-   - Set Cloudflare SSL/TLS mode to "Full (strict)"
-   - Enables end-to-end encryption
-   - Validates certificate authenticity
-
-2. **With Let's Encrypt Staging**
-   - Set Cloudflare SSL/TLS mode to "Full"
-   - Allows testing with staging certificates
-   - Bypasses certificate validation
-
-3. **With Custom SSL**
-   - Ensure certificate is compatible with chosen Cloudflare SSL/TLS mode
-   - Use valid public certificate for "Full (strict)"
-   - Self-signed certificates require "Full" mode
-
-Additional Cloudflare Settings:
-- Enable "Always Use HTTPS"
-- Set minimum TLS version to 1.2
-- Enable HSTS if using `SSL_HSTS_ENABLE=true`
+#### SSL Modes
+1. **Full (strict)** - Production certificates
+2. **Full** - Testing/staging certificates
+3. **Flexible** - Not recommended
 
 ### Security Features
 
-The SSL implementation includes:
+1. **TLS Configuration**
+   - TLS 1.2/1.3 support
+   - Strong cipher suites
+   - OCSP stapling
 
-1. **Modern TLS Configuration**
-   - TLS 1.2 and 1.3 support
-   - Strong cipher suite selection
-   - OCSP stapling enabled
-
-2. **Security Headers**
-   - Strict Transport Security (HSTS)
-   - Content Security Policy (CSP)
+2. **Headers**
+   - HSTS
+   - CSP
    - X-Frame-Options
-   - Other security headers optimized for WHMCS
 
-3. **Certificate Validation**
-   - Automatic key strength verification
-   - Certificate chain validation
-   - Domain match verification
-   - Protocol compatibility checks
+3. **File System**
+   - Restricted permissions
+   - Regular integrity checks
+   - Automated backups
 
-### Configuration Files and Locations
+## Configuration Files Reference
 
-#### SSL Configuration
+### Core Configuration Files
+- `/etc/apache2/apache2.conf` - Main Apache configuration
+- `/etc/php/8.1/apache2/php.ini` - PHP configuration
+- `/etc/mysql/mariadb.conf.d/50-server.cnf` - MariaDB configuration
+- `/var/www/whmcs/.env` - WHMCS environment configuration
 
+### SSL Configuration Files
 1. **Apache SSL Configuration**
-   - Location: `/etc/apache2/conf-available/ssl-security.conf`
-   - Purpose: Main SSL security settings including TLS versions, cipher suites, and security headers
-   - Required directives:
-     - SSLProtocol
-     - SSLCipherSuite
-     - Security headers (CSP, HSTS, etc.)
+   - `/etc/apache2/conf-available/ssl-security.conf` - SSL security settings
+   - `/etc/apache2/sites-available/[domain].conf` - Virtual host configuration
+   - `/etc/letsencrypt/live/[domain]/` - Let's Encrypt certificates
+   - `/etc/ssl/whmcs/` - Custom SSL certificates directory
 
-2. **Let's Encrypt Certificates**
-   - Location: `/etc/letsencrypt/live/[domain]/`
-   - Files:
-     - `cert.pem`: Domain certificate
-     - `privkey.pem`: Private key
-     - `chain.pem`: Certificate chain
-     - `fullchain.pem`: Complete certificate chain
-   - Renewal configuration: `/etc/letsencrypt/renewal/[domain].conf`
+2. **Let's Encrypt Files**
+   - `/etc/letsencrypt/renewal/[domain].conf` - Certificate renewal configuration
+   - `/etc/systemd/system/certbot.timer` - Automatic renewal timer
+   - `/etc/systemd/system/certbot.service` - Renewal service configuration
 
-3. **Custom SSL Certificates**
-   - Location: `/etc/ssl/whmcs/`
-   - Files:
-     - `cert.pem`: Your certificate
-     - `key.pem`: Private key
-     - `chain.pem`: Optional chain certificate
+### Security Configuration Files
+1. **Web Application Firewall**
+   - `/etc/modsecurity/modsecurity.conf` - ModSecurity base configuration
+   - `/etc/modsecurity/whmcs-rules.conf` - WHMCS-specific rules
+   - `/etc/apache2/conf-available/security.conf` - Apache security settings
 
-#### Cloudflare Integration
+2. **Firewall Configuration**
+   - `/etc/ufw/user.rules` - UFW firewall rules
+   - `/etc/ufw/before.rules` - Pre-processing rules
+   - `/etc/apache2/conf-available/cloudflare.conf` - Cloudflare configuration
 
-1. **Cloudflare Apache Configuration**
-   - Location: `/etc/apache2/conf-available/cloudflare.conf`
-   - Purpose: Cloudflare IP ranges and SSL proxy settings
-   - Key components:
-     - RemoteIPHeader settings
-     - Trusted proxy IPs
-     - SSL proxy configurations
+### Log Files
+1. **Web Server Logs**
+   - `/var/log/apache2/access.log` - Apache access logs
+   - `/var/log/apache2/error.log` - Apache error logs
+   - `/var/log/apache2/ssl_access.log` - SSL-specific logs
 
-2. **SSL Mode Configuration**
-   - Location: `/etc/apache2/conf-available/ssl-mode.conf`
-   - Purpose: SSL settings specific to Cloudflare setup
-   - Important settings:
-     - SSLProxyEngine
-     - ProxyCheck directives
-     - X-Forwarded-Proto handling
+2. **Database Logs**
+   - `/var/log/mysql/error.log` - MariaDB error log
+   - `/var/log/mysql/slow-query.log` - Slow query log
 
-#### Security Configurations
+3. **Security Logs**
+   - `/var/log/modsec_audit.log` - ModSecurity audit log
+   - `/var/log/ufw.log` - Firewall logs
+   - `/var/log/letsencrypt/` - SSL certificate logs
 
-1. **UFW Firewall Rules**
-   - Location: `/etc/ufw/`
-   - Key files:
-     - `user.rules`: Custom firewall rules
-     - `before.rules`: Pre-processing rules
-   - Purpose: Network access control and Cloudflare IP allowlisting
-
-2. **ModSecurity Configuration**
-   - Base config: `/etc/modsecurity/modsecurity.conf`
-   - WHMCS rules: `/etc/modsecurity/whmcs-rules.conf`
-   - Purpose: Web application firewall rules specific to WHMCS
-
-3. **Apache Virtual Host**
-   - Location: `/etc/apache2/sites-available/[domain].conf`
-   - Purpose: Domain-specific web server configuration
-   - includes SSL certificate paths and security configurations
-
-#### Log Files
-
-1. **SSL Logs**
-   - Apache SSL: `/var/log/apache2/ssl_access.log`
-   - Let's Encrypt: `/var/log/letsencrypt/`
-   - Purpose: SSL-related errors and access logs
-
-2. **Security Logs**
-   - ModSecurity: `/var/log/modsec_audit.log`
-   - UFW: `/var/log/ufw.log`
-   - Purpose: Security events and blocked requests
-
-#### Maintenance and Verification
-
-1. **Let's Encrypt Renewal**
-   - Timer config: `/etc/systemd/system/certbot.timer`
-   - Service config: `/etc/systemd/system/certbot.service`
-   - Purpose: Automatic certificate renewal
-
-2. **Apache Modules**
-   - Location: `/etc/apache2/mods-enabled/`
-   - Required modules:
-     - `ssl.conf` and `ssl.load`
-     - `headers.conf` and `headers.load`
-     - `remoteip.conf` and `remoteip.load` (for Cloudflare)
-
-## Directory Structure
-
-```
-.
-├── scripts/
-│   ├── install.sh         # Main installation script
-│   ├── setup-php.sh       # PHP installation and configuration
-│   ├── setup-mysql.sh     # MariaDB setup
-│   ├── setup-apache.sh    # Apache configuration
-│   ├── setup-security.sh  # Security measures
-│   └── utils.sh          # Shared utilities
-├── .env.example          # Environment template
-└── README.md
-```
-
-## Installation Process
-
-1. System Update & Requirements
-   - Updates system packages
-   - Installs required dependencies
-   - Configures package mirrors
-
-2. PHP Setup
-   - Installs PHP 8.1 and extensions
-   - Configures PHP for optimal performance
-   - Installs IonCube Loader
-
-3. Database Setup
-   - Installs MariaDB 10.11
-   - Creates database and user
-   - Applies security configurations
-
-4. Web Server Setup
-   - Configures Apache with SSL
-   - Sets up virtual hosts
-   - Implements security headers
-
-5. Security Configuration
-   - Configures UFW firewall
-   - Sets up ModSecurity
-   - Enables automatic updates
-
-## Post-Installation Steps
-
-1. Upload WHMCS Files:
-   ```bash
-   # Upload your WHMCS files to
-   /var/www/whmcs/public_html/
-   ```
-
-2. Complete WHMCS Installation:
-   - Navigate to `https://your-domain.com/install/install.php`
-   - Follow the installation wizard
-   - Remove installation directory when complete
-
-3. Verify Installation:
-   - Check PHP info page (then remove it)
-   - Verify database connection
-   - Test SSL configuration
-
-4. Security Checklist:
-   - Remove verification files
-   - Secure admin directory
-   - Set up regular backups
-   - Configure SSL certificate
-   - Update passwords
+### Backup Locations
+- `/var/backups/whmcs/` - Automated backup directory
+- `/var/backups/whmcs/database/` - Database backups
+- `/var/backups/whmcs/files/` - File backups
+- `/var/backups/whmcs/config/` - Configuration backups
 
 ## Maintenance
 
-- Regular updates:
-  ```bash
-  apt update && apt upgrade
-  ```
-- Monitor logs:
-  ```bash
-  tail -f /var/log/apache2/error.log
-  ```
-- Database backups:
-  ```bash
-  mysqldump -u root -p whmcs > backup.sql
-  ```
+### Regular Updates
+```bash
+# System updates
+apt update && apt upgrade
+
+# Check services
+systemctl status apache2
+systemctl status mariadb
+```
+
+### Monitoring
+```bash
+# Check logs
+tail -f /var/log/apache2/error.log
+tail -f /var/log/mysql/error.log
+
+# Database backup
+mysqldump -u root -p whmcs > backup.sql
+```
 
 ## Troubleshooting
 
-Common issues and solutions:
+### Common Issues
 
-1. Permission Issues:
+1. **Permission Errors**
    ```bash
    # Fix permissions
    sudo scripts/install.sh --fix-permissions
    ```
 
-2. Service Problems:
+2. **SSL Problems**
    ```bash
-   # Check service status
-   systemctl status apache2
-   systemctl status mariadb
+   # Check SSL
+   sudo apache2ctl configtest
+   sudo certbot certificates
    ```
 
-3. Log Locations:
-   - Apache: `/var/log/apache2/`
-   - MySQL: `/var/log/mysql/`
-   - PHP: `/var/log/php/`
+3. **Database Connection Issues**
+   ```bash
+   # Verify MySQL
+   sudo systemctl status mariadb
+   mysql -u whmcs_user -p whmcs
+   ```
 
-## Support
+### Log Locations
+- Apache: `/var/log/apache2/`
+- MySQL: `/var/log/mysql/`
+- PHP: `/var/log/php/`
+- SSL: `/var/log/letsencrypt/`
 
-For issues and feature requests, please use the GitHub issue tracker.
+## Support & Contributing
 
-## Security
+### Getting Help
+- GitHub Issues: Bug reports and feature requests
+- Security Reports: security@chargeditsolutions.com
+- Documentation: Wiki pages
 
-Report security vulnerabilities via email to security@chargeditsolutions.com.
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+### Contributing
+1. Fork repository
+2. Create feature branch
+3. Commit changes
+4. Open pull request
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License - See [LICENSE](LICENSE) file.
 
 ## Disclaimer
 
