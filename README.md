@@ -74,9 +74,214 @@ MYSQL_DATABASE=whmcs
 
 # Installation Paths
 WHMCS_PATH=/var/www/whmcs
+
+# SSL Configuration
+ENABLE_SSL=true
+SSL_TYPE=letsencrypt        # Options: letsencrypt, custom
+SSL_STAGING=false          # Use Let's Encrypt staging for testing
+SSL_AUTO_RENEW=true
+SSL_HSTS_ENABLE=true      # Enable HTTP Strict Transport Security
+
+# Cloudflare Configuration
+ENABLE_CLOUDFLARE=false
+CLOUDFLARE_TRUSTED_IPS_ENABLE=true
 ```
 
 See `.env.example` for all available options.
+
+## SSL Configuration
+
+The installation supports various SSL configurations to accommodate different environments and requirements:
+
+### Let's Encrypt SSL
+
+1. **Production Environment**
+   ```bash
+   SSL_TYPE=letsencrypt
+   SSL_STAGING=false
+   ```
+   - Uses Let's Encrypt production certificates
+   - Suitable for live websites
+   - Limited to 50 certificates per domain per week
+
+2. **Staging Environment**
+   ```bash
+   SSL_TYPE=letsencrypt
+   SSL_STAGING=true
+   ```
+   - Uses Let's Encrypt staging certificates
+   - For testing and development
+   - No rate limits
+   - Browsers will show certificate warnings (expected)
+
+### Custom SSL
+
+```bash
+SSL_TYPE=custom
+SSL_CERT_PATH=/path/to/cert.pem
+SSL_KEY_PATH=/path/to/key.pem
+SSL_CHAIN_PATH=/path/to/chain.pem  # Optional
+```
+- Use your own SSL certificates
+- Supports both self-signed and commercial certificates
+- Chain certificate optional but recommended
+
+### Cloudflare Integration
+
+When using Cloudflare, configure the following:
+
+```bash
+ENABLE_CLOUDFLARE=true
+CLOUDFLARE_TRUSTED_IPS_ENABLE=true
+```
+
+#### Firewall Configuration
+
+The UFW firewall configuration automatically adjusts based on your Cloudflare settings:
+
+1. **With Cloudflare Enabled** (`ENABLE_CLOUDFLARE=true`)
+   - Only Cloudflare IP ranges are whitelisted for ports 80 and 443
+   - Provides additional security by blocking direct access
+   - Automatically updates with latest Cloudflare IP ranges
+
+2. **Without Cloudflare** (`ENABLE_CLOUDFLARE=false`)
+   - Ports 80 and 443 are open to all IPs
+   - Standard web server configuration
+   - Direct access allowed from any IP
+
+#### Cloudflare SSL Modes:
+
+1. **With Let's Encrypt Production**
+   - Set Cloudflare SSL/TLS mode to "Full (strict)"
+   - Enables end-to-end encryption
+   - Validates certificate authenticity
+
+2. **With Let's Encrypt Staging**
+   - Set Cloudflare SSL/TLS mode to "Full"
+   - Allows testing with staging certificates
+   - Bypasses certificate validation
+
+3. **With Custom SSL**
+   - Ensure certificate is compatible with chosen Cloudflare SSL/TLS mode
+   - Use valid public certificate for "Full (strict)"
+   - Self-signed certificates require "Full" mode
+
+Additional Cloudflare Settings:
+- Enable "Always Use HTTPS"
+- Set minimum TLS version to 1.2
+- Enable HSTS if using `SSL_HSTS_ENABLE=true`
+
+### Security Features
+
+The SSL implementation includes:
+
+1. **Modern TLS Configuration**
+   - TLS 1.2 and 1.3 support
+   - Strong cipher suite selection
+   - OCSP stapling enabled
+
+2. **Security Headers**
+   - Strict Transport Security (HSTS)
+   - Content Security Policy (CSP)
+   - X-Frame-Options
+   - Other security headers optimized for WHMCS
+
+3. **Certificate Validation**
+   - Automatic key strength verification
+   - Certificate chain validation
+   - Domain match verification
+   - Protocol compatibility checks
+
+### Configuration Files and Locations
+
+#### SSL Configuration
+
+1. **Apache SSL Configuration**
+   - Location: `/etc/apache2/conf-available/ssl-security.conf`
+   - Purpose: Main SSL security settings including TLS versions, cipher suites, and security headers
+   - Required directives:
+     - SSLProtocol
+     - SSLCipherSuite
+     - Security headers (CSP, HSTS, etc.)
+
+2. **Let's Encrypt Certificates**
+   - Location: `/etc/letsencrypt/live/[domain]/`
+   - Files:
+     - `cert.pem`: Domain certificate
+     - `privkey.pem`: Private key
+     - `chain.pem`: Certificate chain
+     - `fullchain.pem`: Complete certificate chain
+   - Renewal configuration: `/etc/letsencrypt/renewal/[domain].conf`
+
+3. **Custom SSL Certificates**
+   - Location: `/etc/ssl/whmcs/`
+   - Files:
+     - `cert.pem`: Your certificate
+     - `key.pem`: Private key
+     - `chain.pem`: Optional chain certificate
+
+#### Cloudflare Integration
+
+1. **Cloudflare Apache Configuration**
+   - Location: `/etc/apache2/conf-available/cloudflare.conf`
+   - Purpose: Cloudflare IP ranges and SSL proxy settings
+   - Key components:
+     - RemoteIPHeader settings
+     - Trusted proxy IPs
+     - SSL proxy configurations
+
+2. **SSL Mode Configuration**
+   - Location: `/etc/apache2/conf-available/ssl-mode.conf`
+   - Purpose: SSL settings specific to Cloudflare setup
+   - Important settings:
+     - SSLProxyEngine
+     - ProxyCheck directives
+     - X-Forwarded-Proto handling
+
+#### Security Configurations
+
+1. **UFW Firewall Rules**
+   - Location: `/etc/ufw/`
+   - Key files:
+     - `user.rules`: Custom firewall rules
+     - `before.rules`: Pre-processing rules
+   - Purpose: Network access control and Cloudflare IP allowlisting
+
+2. **ModSecurity Configuration**
+   - Base config: `/etc/modsecurity/modsecurity.conf`
+   - WHMCS rules: `/etc/modsecurity/whmcs-rules.conf`
+   - Purpose: Web application firewall rules specific to WHMCS
+
+3. **Apache Virtual Host**
+   - Location: `/etc/apache2/sites-available/[domain].conf`
+   - Purpose: Domain-specific web server configuration
+   - includes SSL certificate paths and security configurations
+
+#### Log Files
+
+1. **SSL Logs**
+   - Apache SSL: `/var/log/apache2/ssl_access.log`
+   - Let's Encrypt: `/var/log/letsencrypt/`
+   - Purpose: SSL-related errors and access logs
+
+2. **Security Logs**
+   - ModSecurity: `/var/log/modsec_audit.log`
+   - UFW: `/var/log/ufw.log`
+   - Purpose: Security events and blocked requests
+
+#### Maintenance and Verification
+
+1. **Let's Encrypt Renewal**
+   - Timer config: `/etc/systemd/system/certbot.timer`
+   - Service config: `/etc/systemd/system/certbot.service`
+   - Purpose: Automatic certificate renewal
+
+2. **Apache Modules**
+   - Location: `/etc/apache2/mods-enabled/`
+   - Required modules:
+     - `ssl.conf` and `ssl.load`
+     - `headers.conf` and `headers.load`
+     - `remoteip.conf` and `remoteip.load` (for Cloudflare)
 
 ## Directory Structure
 

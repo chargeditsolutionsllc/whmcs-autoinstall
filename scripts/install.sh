@@ -63,6 +63,12 @@ log "INFO" "Setting up MySQL..."
 bash "${SCRIPT_DIR}/setup-mysql.sh"
 check_status "MySQL setup"
 
+if [ "$ENABLE_SSL" = "true" ]; then
+    log "INFO" "Setting up SSL..."
+    bash "${SCRIPT_DIR}/setup-ssl.sh"
+    check_status "SSL setup"
+fi
+
 log "INFO" "Setting up Apache..."
 bash "${SCRIPT_DIR}/setup-apache.sh"
 check_status "Apache setup"
